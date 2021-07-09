@@ -1,19 +1,27 @@
-gosrc := $(shell find . -type f -name *.go)
+#Standart rule (first)
+all: run 
+		
+run: build
+	@./todo-server 
 
-all:
-	go run server.go
+build: todo-server todo-cli
 
+todo-cli:
+	go build -o todo-cli cmd/client/main.go
 
-run:
-	go run ./cmd/server/main.go
-
-build:
+todo-server:
+	go build -o todo-server cmd/server/main.go
 	
-
-test:
-
-install:
-	go install ./...
+test: #TODO
 
 fmt:
-	go fmt $(gosrc)
+	go fmt ./...
+
+fclean:
+	rm -rf todo-server todo-cli		
+
+protoc:
+	@bash -c "protoc --go_out=. --go-grpc_out=.  internal/protobuf/list.proto 1>/dev/null"
+
+
+.PHONY: todo-server todo-cli

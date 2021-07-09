@@ -1,0 +1,2 @@
+internal/client/client.go:5:2: found packages protobuf (list.pb.go) and _ (list_grpc.pb.go) in /home/masai/Documents/todogo/internal/protobuf
+

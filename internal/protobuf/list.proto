@@ -1,0 +1,27 @@
+syntax = "proto3";
+package todo;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "./internal/protobuf";
+
+service AddTicket {
+  rpc SendTicket(Ticket) returns (Response);
+}
+
+message Ticket {
+  int32 id = 1;
+  string title = 2;
+  string body = 3;
+  bool state = 4;
+  google.protobuf.Timestamp last_updated = 5;
+}
+
+message Response {
+  string body = 1;
+  bool success = 2;
+}
+
+message ReqId {
+  int32 id = 1;
+}
