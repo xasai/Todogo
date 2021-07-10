@@ -5,8 +5,33 @@ import "google/protobuf/timestamp.proto";
 
 option go_package = "./internal/protobuf";
 
-service AddTicket {
-  rpc SendTicket(Ticket) returns (Response);
+service TodoServ {
+  rpc TodoRequest(Request) returns (stream Response);
+}
+
+message Request {
+  string method = 1;
+  oneof body {
+    // if Id == 0, server will response with all todo entities.
+    Id get = 2;
+
+    // just delete Ticket by Id
+    Id del = 4;
+
+    // PUT method will change body of existing Ticket if id == 0.
+    // Otherwise it will create new Ticket.
+    Ticket put = 3;
+  }
+}
+message Response {
+  oneof body {
+    Ticket ticket = 1;
+    string text = 2;
+  }
+}
+
+message Id {
+  int32 id = 1;
 }
 
 message Ticket {
@@ -15,13 +40,4 @@ message Ticket {
   string body = 3;
   bool state = 4;
   google.protobuf.Timestamp last_updated = 5;
-}
-
-message Response {
-  string body = 1;
-  bool success = 2;
-}
-
-message ReqId {
-  int32 id = 1;
 }

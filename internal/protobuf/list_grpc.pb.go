@@ -14,88 +14,115 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-// AddTicketClient is the client API for AddTicket service.
+// TodoServClient is the client API for TodoServ service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type AddTicketClient interface {
-	SendTicket(ctx context.Context, in *Ticket, opts ...grpc.CallOption) (*Response, error)
+type TodoServClient interface {
+	TodoRequest(ctx context.Context, in *Request, opts ...grpc.CallOption) (TodoServ_TodoRequestClient, error)
 }
 
-type addTicketClient struct {
+type todoServClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewAddTicketClient(cc grpc.ClientConnInterface) AddTicketClient {
-	return &addTicketClient{cc}
+func NewTodoServClient(cc grpc.ClientConnInterface) TodoServClient {
+	return &todoServClient{cc}
 }
 
-func (c *addTicketClient) SendTicket(ctx context.Context, in *Ticket, opts ...grpc.CallOption) (*Response, error) {
-	out := new(Response)
-	err := c.cc.Invoke(ctx, "/todo.AddTicket/SendTicket", in, out, opts...)
+func (c *todoServClient) TodoRequest(ctx context.Context, in *Request, opts ...grpc.CallOption) (TodoServ_TodoRequestClient, error) {
+	stream, err := c.cc.NewStream(ctx, &TodoServ_ServiceDesc.Streams[0], "/todo.TodoServ/TodoRequest", opts...)
 	if err != nil {
 		return nil, err
 	}
-	return out, nil
-}
-
-// AddTicketServer is the server API for AddTicket service.
-// All implementations must embed UnimplementedAddTicketServer
-// for forward compatibility
-type AddTicketServer interface {
-	SendTicket(context.Context, *Ticket) (*Response, error)
-	mustEmbedUnimplementedAddTicketServer()
-}
-
-// UnimplementedAddTicketServer must be embedded to have forward compatible implementations.
-type UnimplementedAddTicketServer struct {
-}
-
-func (UnimplementedAddTicketServer) SendTicket(context.Context, *Ticket) (*Response, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SendTicket not implemented")
-}
-func (UnimplementedAddTicketServer) mustEmbedUnimplementedAddTicketServer() {}
-
-// UnsafeAddTicketServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to AddTicketServer will
-// result in compilation errors.
-type UnsafeAddTicketServer interface {
-	mustEmbedUnimplementedAddTicketServer()
-}
-
-func RegisterAddTicketServer(s grpc.ServiceRegistrar, srv AddTicketServer) {
-	s.RegisterService(&AddTicket_ServiceDesc, srv)
-}
-
-func _AddTicket_SendTicket_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Ticket)
-	if err := dec(in); err != nil {
+	x := &todoServTodoRequestClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
-	if interceptor == nil {
-		return srv.(AddTicketServer).SendTicket(ctx, in)
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
 	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/todo.AddTicket/SendTicket",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AddTicketServer).SendTicket(ctx, req.(*Ticket))
-	}
-	return interceptor(ctx, in, info, handler)
+	return x, nil
 }
 
-// AddTicket_ServiceDesc is the grpc.ServiceDesc for AddTicket service.
+type TodoServ_TodoRequestClient interface {
+	Recv() (*Response, error)
+	grpc.ClientStream
+}
+
+type todoServTodoRequestClient struct {
+	grpc.ClientStream
+}
+
+func (x *todoServTodoRequestClient) Recv() (*Response, error) {
+	m := new(Response)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+// TodoServServer is the server API for TodoServ service.
+// All implementations must embed UnimplementedTodoServServer
+// for forward compatibility
+type TodoServServer interface {
+	TodoRequest(*Request, TodoServ_TodoRequestServer) error
+	mustEmbedUnimplementedTodoServServer()
+}
+
+// UnimplementedTodoServServer must be embedded to have forward compatible implementations.
+type UnimplementedTodoServServer struct {
+}
+
+func (UnimplementedTodoServServer) TodoRequest(*Request, TodoServ_TodoRequestServer) error {
+	return status.Errorf(codes.Unimplemented, "method TodoRequest not implemented")
+}
+func (UnimplementedTodoServServer) mustEmbedUnimplementedTodoServServer() {}
+
+// UnsafeTodoServServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to TodoServServer will
+// result in compilation errors.
+type UnsafeTodoServServer interface {
+	mustEmbedUnimplementedTodoServServer()
+}
+
+func RegisterTodoServServer(s grpc.ServiceRegistrar, srv TodoServServer) {
+	s.RegisterService(&TodoServ_ServiceDesc, srv)
+}
+
+func _TodoServ_TodoRequest_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(Request)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(TodoServServer).TodoRequest(m, &todoServTodoRequestServer{stream})
+}
+
+type TodoServ_TodoRequestServer interface {
+	Send(*Response) error
+	grpc.ServerStream
+}
+
+type todoServTodoRequestServer struct {
+	grpc.ServerStream
+}
+
+func (x *todoServTodoRequestServer) Send(m *Response) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+// TodoServ_ServiceDesc is the grpc.ServiceDesc for TodoServ service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var AddTicket_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "todo.AddTicket",
-	HandlerType: (*AddTicketServer)(nil),
-	Methods: []grpc.MethodDesc{
+var TodoServ_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "todo.TodoServ",
+	HandlerType: (*TodoServServer)(nil),
+	Methods:     []grpc.MethodDesc{},
+	Streams: []grpc.StreamDesc{
 		{
-			MethodName: "SendTicket",
-			Handler:    _AddTicket_SendTicket_Handler,
+			StreamName:    "TodoRequest",
+			Handler:       _TodoServ_TodoRequest_Handler,
+			ServerStreams: true,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
 	Metadata: "internal/protobuf/list.proto",
 }

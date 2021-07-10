@@ -1,7 +1,6 @@
 package server
 
 import (
-	"context"
 	"fmt"
 	pb "github.com/xasai/todogo/internal/protobuf"
 	"google.golang.org/grpc"
@@ -10,19 +9,27 @@ import (
 	"time"
 )
 
-const PORT = ":4242"
+const (
+	PORT = ":4242"
+	DONE = true
+	TODO = false
+)
 
-type Server struct {
-	pb.UnimplementedAddTicketServer
+type todoServer struct {
+	pb.UnimplementedTodoServServer
 }
 
-func (s *Server) SendTicket(ctx context.Context, ticket *pb.Ticket) (*pb.Response, error) {
-	log.Println("Received ticket with title", ticket.Title)
-	return &pb.Response{Body: "success!", Success: true}, nil
-}
+var Tickets []pb.Ticket
 
-func (s *Server) mustEmbedUnimplementedAddTicketServer() {
-	panic("implement me")
+func (s *todoServer) TodoRequest(req *pb.Request, stream pb.TodoServ_TodoRequestServer)  error {
+	if req.Method == "GET" {
+		HandleGetRequest(req, stream)
+	} else if req.Method == "PUT" {
+		HandlePutRequest(req)
+	} else if req.Method == "DEL" {
+		HandleDelRequest(req)
+	}
+	return nil
 }
 
 func Run() {
@@ -31,12 +38,12 @@ func Run() {
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
-	s := Server{}//Server instance
-	gs := grpc.NewServer()
-	pb.RegisterAddTicketServer(gs, &s)
+
+	grpcServer := grpc.NewServer()
+	pb.RegisterTodoServServer(grpcServer, &todoServer{})
 
 	log.Printf("\n Server now listening at %v \n", listener.Addr())
-	if err := gs.Serve(listener); err != nil {
+	if err := grpcServer.Serve(listener); err != nil {
 		log.Fatalf("failed to server %v", err)
 	}
 }
@@ -47,4 +54,7 @@ func init() {
 		time.Sleep(time.Second / 2)
 		fmt.Print(".")
 	}
+	// initializing 0 id with empty Ticket
+	Tickets = append(Tickets[0:], pb.Ticket{})
+	fmt.Println()
 }
