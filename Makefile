@@ -8,6 +8,8 @@ ssrc = $(wildcard ./internal/server/*.go)
 all: run
 		
 run: build
+	$(server) & #Running server in background
+	sleep 2 
 	$(client)
 
 build: $(client) $(server)

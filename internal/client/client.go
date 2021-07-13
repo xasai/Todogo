@@ -7,8 +7,8 @@ import (
 	pb "github.com/xasai/todogo/internal/protobuf"
 	"google.golang.org/grpc"
 	"log"
-	"time"
 	"strings"
+	"time"
 )
 
 const (
@@ -61,12 +61,12 @@ func pprintNote(n *pb.Note) {
 	status := (map[bool]string{
 		false: YELL + "TODO", true: RED + "DONE"})[n.Status == DONE]
 
-	//Time converting 
+	//Time converting
 	created := ((n.WasCreated.AsTime()).Local()).Format(time.Stamp)
 	updated := ((n.LastUpdated.AsTime()).Local()).Format(time.Stamp)
 
 	fmt.Printf(
-			PINK+delim+"\n"+
+		PINK+delim+"\n"+
 			GREEN+"ID: "+CYAN+"%v\n"+
 			GREEN+"Title: "+CYAN+"%s \n"+
 			GREEN+"Was created: "+CYAN+"%s "+
@@ -75,5 +75,5 @@ func pprintNote(n *pb.Note) {
 			GREEN+"Status: %s\n"+
 			CYAN+"%s"+RES+
 			PINK+delim+"\n"+RES,
-			n.Id, n.Title, created, updated, status, n.Description)
+		n.Id, n.Title, created, updated, status, n.Description)
 }
