@@ -2,64 +2,78 @@ package client
 
 import (
 	"fmt"
+	"github.com/inancgumus/screen"
+	. "github.com/xasai/todogo/internal/cli"
 	pb "github.com/xasai/todogo/internal/protobuf"
 	"google.golang.org/grpc"
 	"log"
-	"os"
+	"time"
+	"strings"
 )
 
 const (
 	PORT = ":4242"
-	DONE bool = true
-	TODO bool = false
+	DONE = true
+	TODO = false
 )
 
 func Run() {
-	conn , err := grpc.Dial(PORT, grpc.WithInsecure())
+	screen.Clear()
+	screen.MoveTopLeft()
+	cc, err := grpc.Dial(PORT,
+		grpc.WithInsecure(),
+		grpc.WithBlock(),
+		grpc.FailOnNonTempDialError(true))
 	if err != nil {
-		log.Fatalf("Couldn't connect: %v\n", err)
+		log.Fatalf(RED+"Failed to establish connection with gRPC: %s\n"+RES, err.Error())
 	}
-	defer conn.Close()
-	RunInteractiveMod(conn)
+	defer cc.Close()
+	log.Println(YELL + "Successfully connected to grpc server" + RES)
+	client := pb.NewTodoServiceClient(cc)
+	runInteractiveMod(client)
 }
 
-func RunInteractiveMod(connection *grpc.ClientConn) {
-	log.Println("Running interactive mod")
-	log.Println("Successfully connected to grpc server . . . press Q to terminate")
-	var (
-		action string
-		id int
-		ticket pb.Ticket
-	)
-	for {
-		fmt.Println("Write a number of action: \n\t" +
-					"1 - create new todo-note\n\t" +
-					"2 - get note\n\t" +
-					"3 - get list of all notes\n\t" +
-					"4 - change a content of note\n\t" +
-					"5 - change state of a todo note\n\t" +
-					"6 - delete note")
+func pprintResponse(r *pb.Response, err error) {
+	if err != nil {
+		log.Panic(err)
+	}
+	screen.Clear()
+	screen.MoveTopLeft()
 
-		fmt.Scanf("%s", &action)
-		switch action {
-		case "1":
+	w, _ := screen.Size()
+	template := fmt.Sprintf("%0*d", w, 0)
+	delim := strings.ReplaceAll(template, "0", "+")
 
-		case "q", "Q":
-			fmt.Println("See you soon")
-			os.Exit(0)
-		default:
-			fmt.Println("Insert only on of 1-6 or Q to quit")
-			continue
-		}
+	fmt.Println(GREEN + "\n" + delim + "\n" +
+		YELL + "\n" + r.Text + "\n" +
+		GREEN + "\n" + delim + RES)
+	if r.Note != nil {
+		pprintNote(r.Note)
 	}
 }
 
+func pprintNote(n *pb.Note) {
+	w, _ := screen.Size()
+	template := fmt.Sprintf("%0*d", w, 0)
+	delim := strings.ReplaceAll(template, "0", "-")
 
-func printTicket(t *pb.Ticket) {
-	fmt.Println("ID:", t.Id)
-	fmt.Println("Title:", t.Title)
-	fmt.Println("Body:", t.Body)
-	//converting ticket's state to message
-	state := map[bool]string{TODO: "To do", DONE: "Done"}[t.State == DONE]
-	fmt.Println("State:", state)
+	//C like ternary: status = n.Status == DONE ? "DONE" : "TODO"
+	status := (map[bool]string{
+		false: YELL + "TODO", true: RED + "DONE"})[n.Status == DONE]
+
+	//Time converting 
+	created := ((n.WasCreated.AsTime()).Local()).Format(time.Stamp)
+	updated := ((n.LastUpdated.AsTime()).Local()).Format(time.Stamp)
+
+	fmt.Printf(
+			PINK+delim+"\n"+
+			GREEN+"ID: "+CYAN+"%v\n"+
+			GREEN+"Title: "+CYAN+"%s \n"+
+			GREEN+"Was created: "+CYAN+"%s "+
+			GREEN+"| Last updated: "+CYAN+"%s\n"+
+			PINK+delim+"\n"+
+			GREEN+"Status: %s\n"+
+			CYAN+"%s"+RES+
+			PINK+delim+"\n"+RES,
+			n.Id, n.Title, created, updated, status, n.Description)
 }

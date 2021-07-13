@@ -16,35 +16,21 @@ const (
 )
 
 type todoServer struct {
-	pb.UnimplementedTodoServServer
+	pb.UnimplementedTodoServiceServer
 }
 
-var Tickets []pb.Ticket
-
-func (s *todoServer) TodoRequest(req *pb.Request, stream pb.TodoServ_TodoRequestServer)  error {
-	if req.Method == "GET" {
-		HandleGetRequest(req, stream)
-	} else if req.Method == "PUT" {
-		HandlePutRequest(req)
-	} else if req.Method == "DEL" {
-		HandleDelRequest(req)
-	}
-	return nil
-}
+var Notes = make(map[int32]*pb.Note) //Here I stored all Notes
 
 func Run() {
-	//Create new listener on port 4242
 	listener, err := net.Listen("tcp", PORT)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
-
 	grpcServer := grpc.NewServer()
-	pb.RegisterTodoServServer(grpcServer, &todoServer{})
-
-	log.Printf("\n Server now listening at %v \n", listener.Addr())
+	pb.RegisterTodoServiceServer(grpcServer, &todoServer{})
+	log.Printf("\nServer now listening at %v\tPress Ctrl-C to exit\n", listener.Addr())
 	if err := grpcServer.Serve(listener); err != nil {
-		log.Fatalf("failed to server %v", err)
+		log.Fatalf("Server Failure%v", err)
 	}
 }
 
@@ -54,7 +40,5 @@ func init() {
 		time.Sleep(time.Second / 2)
 		fmt.Print(".")
 	}
-	// initializing 0 id with empty Ticket
-	Tickets = append(Tickets[0:], pb.Ticket{})
 	fmt.Println()
 }

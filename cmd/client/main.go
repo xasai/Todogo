@@ -2,6 +2,6 @@ package main
 
 import "github.com/xasai/todogo/internal/client"
 
-func main()  {
+func main() {
 	client.Run()
 }

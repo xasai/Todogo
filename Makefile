@@ -1,27 +1,31 @@
+client = ./client 
+csrc = $(wildcard ./internal/client/*.go)
+
+server = ./server
+ssrc = $(wildcard ./internal/server/*.go)
+
 #Standart rule (first)
-all: run 
+all: run
 		
 run: build
-	@./todo-server 
+	$(client)
 
-build: todo-server todo-cli
+build: $(client) $(server)
 
-todo-cli:
-	go build -o todo-cli cmd/client/main.go
+$(client): $(csrc)
+	go build -o $(client) cmd/client/main.go
 
-todo-server:
-	go build -o todo-server cmd/server/main.go
-	
-test: #TODO
+$(server): $(ssrc)
+	go build -o $(server) cmd/server/main.go
+
+fclean:
+	rm -rf $(server) $(client)
+
+get:
+	go get ./... 
 
 fmt:
 	go fmt ./...
 
-fclean:
-	rm -rf todo-server todo-cli		
-
 protoc:
-	@bash -c "protoc --go_out=. --go-grpc_out=.  internal/protobuf/list.proto 1>/dev/null"
-
-
-.PHONY: todo-server todo-cli
+	protoc --go_out=. --go-grpc_out=.  internal/protobuf/note.proto

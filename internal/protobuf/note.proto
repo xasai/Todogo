@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package todo;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "./internal/protobuf";
+
+service TodoService {
+  rpc CreateNewNote(Note) returns (Response);
+  rpc GetNoteById(RequestId) returns (Response);
+  rpc GetAllNotes(RequestId) returns (stream Note);
+  rpc ChangeNoteContent(Note) returns (Response);
+  rpc MarkDoneById(RequestId) returns (Response);
+  rpc DelNoteById(RequestId) returns (Response);
+}
+
+message RequestId {
+  int32 note_id = 1;
+}
+message Response {
+  string text = 1;
+  Note note= 2;
+}
+
+message Note {
+  int32 id = 1;
+  string title = 2;
+  string description = 3;
+  bool status = 4; // may be TODO or DONE
+  google.protobuf.Timestamp was_created = 5;
+  google.protobuf.Timestamp last_updated = 6;
+}
