@@ -1,2 +1,2 @@
-# Todogo
-Client-server todo list appliaction.
+# Run
+<code>make get && make run</code>
